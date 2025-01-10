@@ -1,5 +1,8 @@
 use std::io::{stdout, Write};
 
+mod vec3;
+mod color;
+
 fn main() {
     /* Image */
     let image_width = 256;
@@ -16,11 +19,14 @@ fn main() {
             let g = j as f64 / (image_height - 1) as f64;
             let b = 0.0;
 
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
+            let pixel_color = color::Color::new(r, g, b);
+            pixel_color.write_color(&mut stdout().lock()).unwrap();
 
-            println!("{} {} {}", ir, ig, ib);
+            // let ir = (255.999 * r) as i32;
+            // let ig = (255.999 * g) as i32;
+            // let ib = (255.999 * b) as i32;
+            //
+            // println!("{} {} {}", ir, ig, ib);
         }
     }
     eprintln!("\rDone!                         ");
