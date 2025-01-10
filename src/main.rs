@@ -2,6 +2,7 @@ use std::io::{stdout, Write};
 
 mod vec3;
 mod color;
+mod ray;
 
 fn main() {
     /* Image */
