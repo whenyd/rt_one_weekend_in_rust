@@ -10,17 +10,17 @@ mod ray;
 
 fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64 {
     let oc = center - r.origin();
-    let a = dot(r.direction(), r.direction());
-    let b = -2.0 * dot(r.direction(), oc);
-    let c = dot(oc, oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
+    let a = r.direction().squared_length(); // 简化了代码写法
+    let h = dot(r.direction(), oc); // 降低了运算的复杂度
+    let c = oc.squared_length() - radius * radius; // 简化了代码写法
+    let discriminant = h * h - a * c;
 
     if discriminant < 0.0 {
         return -1.0;
     }
 
     // 只需要最近的交点, 所以取较小的解
-    (-b - discriminant.sqrt()) / (2.0 * a)
+    (h - discriminant.sqrt()) / a
 }
 
 fn ray_color(r: &Ray) -> Color {
