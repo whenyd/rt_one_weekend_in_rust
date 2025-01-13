@@ -1,14 +1,8 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
     pub e: [f64; 3],
-}
-
-impl Default for Vec3 {
-    fn default() -> Self {
-        Self { e: [0.0, 0.0, 0.0] }
-    }
 }
 
 impl Neg for Vec3 {
