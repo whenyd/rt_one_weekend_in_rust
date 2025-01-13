@@ -1,8 +1,13 @@
 use std::io::{stdout, Write};
+use std::rc::Rc;
 
 use crate::color::Color;
+use crate::hittable::Hittable;
+use crate::hittable_list::HittableList;
 use crate::ray::Ray;
-use crate::vec3::{dot, Point3, unit_vector, Vec3};
+use crate::rtweekend::INFINITY;
+use crate::sphere::Sphere;
+use crate::vec3::{Point3, unit_vector, Vec3};
 
 mod vec3;
 mod color;
@@ -10,39 +15,20 @@ mod ray;
 mod hittable;
 mod sphere;
 mod hittable_list;
+mod rtweekend;
 
-fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = center - r.origin();
-    let a = r.direction().squared_length(); // 简化了代码写法
-    let h = dot(r.direction(), oc); // 降低了运算的复杂度
-    let c = oc.squared_length() - radius * radius; // 简化了代码写法
-    let discriminant = h * h - a * c;
-
-    if discriminant < 0.0 {
-        return -1.0;
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    match world.hit(r, 0.0, INFINITY) {
+        Some(rec) => {
+            0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0))
+        }
+        None => {
+            let unit_direction = unit_vector(r.direction());
+            let a = 0.5 * (unit_direction.y() + 1.0); // a的范围为 [0, 1]
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0)
+                + a * Color::new(0.5, 0.7, 1.0)
+        }
     }
-
-    // 只需要最近的交点, 所以取较小的解
-    (h - discriminant.sqrt()) / a
-}
-
-fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        // 求法线: 交点 - 圆心
-        let N = unit_vector(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        // map normal to color
-        return 0.5 * Color::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0);
-    }
-
-    let unit_direction = unit_vector(r.direction());
-
-    // 根据光线的单位方向向量的 y 进行混合
-    let a = 0.5 * (unit_direction.y() + 1.0); // a的范围为 [0, 1]
-
-    // a越小, 越靠近地面, 越白; 反之, 越蓝
-    (1.0 - a) * Color::new(1.0, 1.0, 1.0)
-        + a * Color::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -53,6 +39,17 @@ fn main() {
     // 计算图像高度，并确保至少为1。
     let mut image_height = (image_width as f64 / aspect_ratio) as i32;
     image_height = if image_height < 1 { 1 } else { image_height };
+
+
+    /* World */
+    let mut world = HittableList::default();
+    world.add(Rc::new(Sphere::new(
+        Point3::new(0.0, 0.0, -1.0), 0.5)
+    ));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0), 100.0)
+    ));
+
 
     /* Camera */
     // 视口宽度小于1是可以的，因为它们是实值。
@@ -92,7 +89,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(&r, &world);
             pixel_color.write_color(&mut stdout().lock()).unwrap();
         }
     }

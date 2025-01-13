@@ -4,7 +4,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 
 #[derive(Default)]
-struct HittableList {
+pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
 }
 
@@ -13,14 +13,16 @@ impl HittableList {
         Self { objects: vec![object] }
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.objects.clear()
     }
 
-    fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object)
     }
+}
 
+impl Hittable for HittableList {
     fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let mut rec = HitRecord::default();
         let mut hit_anything: bool = false;

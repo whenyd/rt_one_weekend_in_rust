@@ -2,13 +2,13 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3};
 
-struct Sphere {
+pub struct Sphere {
     center: Point3,
     radius: f64,
 }
 
 impl Sphere {
-    fn new(center: Point3, radius: f64) -> Self {
+    pub fn new(center: Point3, radius: f64) -> Self {
         // fmax(0, radius)
         Self { center, radius }
     }
@@ -44,7 +44,7 @@ impl Hittable for Sphere {
             front_face: false,
         };
         rec.set_face_normal(r, &outward_normal);
-        
+
         Some(rec)
     }
 }
