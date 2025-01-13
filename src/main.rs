@@ -9,6 +9,7 @@ mod color;
 mod ray;
 mod hittable;
 mod sphere;
+mod hittable_list;
 
 fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64 {
     let oc = center - r.origin();

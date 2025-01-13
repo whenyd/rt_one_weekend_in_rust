@@ -1,6 +1,7 @@
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 
+#[derive(Default)]
 pub struct HitRecord {
     pub p: Point3,
     pub t: f64,
