@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
 use crate::ray::Ray;
 
 #[derive(Default)]
@@ -23,16 +24,16 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut rec = HitRecord::default();
         let mut hit_anything: bool = false;
-        let mut closet_so_far = ray_tmax;
+        let mut closest_so_far = ray_t.max;
 
         // 使用 iter() 遍历，以确保只获取不可变引用
         for object in self.objects.iter() {
-            if let Some(temp) = object.hit(r, ray_tmin, closet_so_far) {
+            if let Some(temp) = object.hit(r, Interval::new(ray_t.min, closest_so_far)) {
                 hit_anything = true;
-                closet_so_far = temp.t;
+                closest_so_far = temp.t;
                 rec = temp;
             }
         }

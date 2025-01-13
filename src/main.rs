@@ -4,6 +4,7 @@ use std::rc::Rc;
 use crate::color::Color;
 use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::rtweekend::INFINITY;
 use crate::sphere::Sphere;
@@ -16,9 +17,10 @@ mod hittable;
 mod sphere;
 mod hittable_list;
 mod rtweekend;
+mod interval;
 
 fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
-    match world.hit(r, 0.0, INFINITY) {
+    match world.hit(r, Interval::new(0.0, INFINITY)) {
         Some(rec) => {
             0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0))
         }
