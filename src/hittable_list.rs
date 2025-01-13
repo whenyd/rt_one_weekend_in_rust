@@ -26,7 +26,8 @@ impl HittableList {
         let mut hit_anything: bool = false;
         let mut closet_so_far = ray_tmax;
 
-        for object in self.objects {
+        // 使用 iter() 遍历，以确保只获取不可变引用
+        for object in self.objects.iter() {
             if let Some(temp) = object.hit(r, ray_tmin, closet_so_far) {
                 hit_anything = true;
                 closet_so_far = temp.t;
