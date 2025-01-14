@@ -4,13 +4,14 @@ use crate::color::Color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::INFINITY;
+use crate::rtweekend::{INFINITY, random_double};
 use crate::vec3::{Point3, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
     pub aspect_ratio: f64,
     pub image_width: i32,
+    pub samples_per_pixel: i32,
 
     // 在 initialize 中计算
     image_height: i32,
@@ -26,6 +27,7 @@ impl Camera {
         Self {
             aspect_ratio: 16.0 / 9.0,
             image_width: 400,
+            samples_per_pixel: 10,
 
             image_height: 0,
             center: Default::default(),
@@ -45,17 +47,27 @@ impl Camera {
             eprint!("\rScanlines remaining: {}", self.image_height - j);
             stdout().flush().unwrap();
             for i in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + i as f64 * self.pixel_delta_u
-                    + j as f64 * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let r = Ray::new(self.center, ray_direction);
+                let mut pixel_color = Color::default();
+                for _ in 0..self.samples_per_pixel {
+                    let r = self.get_ray(i, j);
+                    pixel_color += Self::ray_color(&r, world);
+                }
 
-                let pixel_color = Self::ray_color(&r, world);
+                pixel_color /= self.samples_per_pixel as f64;
                 pixel_color.write_color(&mut stdout().lock()).unwrap();
             }
         }
         eprintln!("\rDone!                         ");
+    }
+
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let offset = Self::sample_square();
+        let pixel_sample = self.pixel00_loc
+            + (i as f64 + offset.x()) * self.pixel_delta_u
+            + (j as f64 + offset.y()) * self.pixel_delta_v;
+
+        let ray_direction = pixel_sample - self.center;
+        Ray::new(self.center, ray_direction)
     }
 
     fn initialize(&mut self) {
@@ -107,5 +119,11 @@ impl Camera {
                     + a * Color::new(0.5, 0.7, 1.0)
             }
         }
+    }
+
+    /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+    fn sample_square() -> Vec3 {
+        // 从 [0,1) 到 [-0.5, 0.5]
+        Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 }
