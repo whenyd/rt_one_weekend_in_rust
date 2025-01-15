@@ -5,7 +5,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, random};
-use crate::vec3::{Point3, unit_vector, Vec3};
+use crate::vec3::{Point3, random_on_hemisphere, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
@@ -44,7 +44,8 @@ impl Camera {
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
         for j in 0..self.image_height {
-            eprint!("\rScanlines remaining: {}", self.image_height - j);
+            // 多一个空格, 当行数从3位数变成2位数时确保清空缓存
+            eprint!("\rScanlines remaining: {} ", self.image_height - j);
             stdout().flush().unwrap();
             for i in 0..self.image_width {
                 let mut pixel_color = Color::default();
@@ -107,10 +108,14 @@ impl Camera {
         self.pixel_delta_v = pixel_delta_v;
     }
 
+    /// Returns the color for a given scene ray.
     fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
         match world.hit(r, Interval::new(0.0, INFINITY)) {
             Some(rec) => {
-                0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0))
+                // 击中后在同一面发生漫反射
+                let direction = random_on_hemisphere(&rec.normal);
+                // 每次 bounce 返回 50% 的颜色, 我们应该期望得到漂亮的灰色
+                0.5 * Self::ray_color(&Ray::new(rec.p, direction), world)
             }
             None => {
                 let unit_direction = unit_vector(r.direction());
