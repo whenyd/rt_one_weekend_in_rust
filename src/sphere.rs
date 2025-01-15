@@ -41,7 +41,7 @@ impl Hittable for Sphere {
         let mut rec = HitRecord {
             p,
             t: root,
-            normal: (p - self.center) / self.radius,
+            normal: outward_normal, // 法线始终指向表面"外面", 而且为单位向量
             front_face: false,
         };
         rec.set_face_normal(r, &outward_normal);
