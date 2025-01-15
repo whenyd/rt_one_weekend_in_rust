@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
+use crate::rtweekend::{random, random_range};
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
     pub e: [f64; 3],
@@ -116,8 +118,22 @@ impl Vec3 {
         (self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]).sqrt()
     }
 
-    pub fn squared_length(&self) -> f64 {
+    pub fn length_squared(&self) -> f64 {
         self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
+    }
+
+    pub fn random() -> Self {
+        Self { e: [random(), random(), random()] }
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        Self {
+            e: [
+                random_range(min, max),
+                random_range(min, max),
+                random_range(min, max),
+            ]
+        }
     }
 }
 
@@ -139,4 +155,23 @@ pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
 
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    loop {
+        let p = Vec3::random_range(-1.0, 1.0);
+        let lensq = p.length_squared();
+        if 1e-160 < lensq && lensq <= 1.0 {
+            return p / lensq.sqrt();
+        }
+    }
+}
+
+pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+    let random_vec = random_unit_vector();
+    if dot(random_vec, *normal) > 0.0 {
+        random_vec
+    } else {
+        -random_vec
+    }
 }

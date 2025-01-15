@@ -4,7 +4,7 @@ use crate::color::Color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::{INFINITY, random_double};
+use crate::rtweekend::{INFINITY, random};
 use crate::vec3::{Point3, unit_vector, Vec3};
 
 pub struct Camera {
@@ -124,6 +124,6 @@ impl Camera {
     /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     fn sample_square() -> Vec3 {
         // 从 [0,1) 到 [-0.5, 0.5]
-        Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
+        Vec3::new(random() - 0.5, random() - 0.5, 0.0)
     }
 }

@@ -18,9 +18,9 @@ impl Sphere {
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = self.center - r.origin();
-        let a = r.direction().squared_length(); // 简化了代码写法
+        let a = r.direction().length_squared(); // 简化了代码写法
         let h = dot(r.direction(), oc); // 降低了运算的复杂度
-        let c = oc.squared_length() - self.radius * self.radius; // 简化了代码写法
+        let c = oc.length_squared() - self.radius * self.radius; // 简化了代码写法
         let discriminant = h * h - a * c;
 
         if discriminant < 0.0 {
