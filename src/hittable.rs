@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 
@@ -10,6 +13,10 @@ pub struct HitRecord {
     // 记录击中正面还是反面,
     // 渲染时这对于一些对象很重要, 需要区分
     pub front_face: bool,
+
+    // Option: 允许None初始化
+    // Box: 智能指针, 堆上的对象
+    pub mat: Option<Rc<dyn Material>>,
 }
 
 impl HitRecord {

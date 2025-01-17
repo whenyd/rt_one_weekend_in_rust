@@ -16,6 +16,7 @@ mod hittable_list;
 mod rtweekend;
 mod interval;
 mod camera;
+mod material;
 
 
 fn main() {
