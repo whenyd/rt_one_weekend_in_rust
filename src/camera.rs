@@ -116,7 +116,8 @@ impl Camera {
             return Color::default();
         }
 
-        match world.hit(r, Interval::new(0.0, INFINITY)) {
+        // t的最小值略大于0, 忽略很近的命中点, 因为可能时浮点计算误差产生的
+        match world.hit(r, Interval::new(0.001, INFINITY)) {
             Some(rec) => {
                 // 击中后在同一面发生漫反射
                 let direction = random_on_hemisphere(&rec.normal);
