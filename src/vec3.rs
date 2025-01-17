@@ -167,6 +167,7 @@ pub fn random_unit_vector() -> Vec3 {
     }
 }
 
+/// 生成和`normal`在同一半球的随机单位向量.
 pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
     let random_vec = random_unit_vector();
     if dot(random_vec, *normal) > 0.0 {
