@@ -9,9 +9,10 @@ use crate::vec3::{Point3, random_on_hemisphere, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
-    pub aspect_ratio: f64,
-    pub image_width: i32,
-    pub samples_per_pixel: i32,
+    pub aspect_ratio: f64,       // Ratio of image width over height
+    pub image_width: i32,        // Rendered image width in pixel count
+    pub samples_per_pixel: i32,  // Count of random samples for each pixel
+    pub max_depth: i32,          // Maximum number of ray bounces into scene
 
     // 在 initialize 中计算
     image_height: i32,
@@ -28,6 +29,7 @@ impl Camera {
             aspect_ratio: 16.0 / 9.0,
             image_width: 400,
             samples_per_pixel: 10,
+            max_depth: 10,
 
             image_height: 0,
             center: Default::default(),
@@ -51,7 +53,7 @@ impl Camera {
                 let mut pixel_color = Color::default();
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color += Self::ray_color(&r, world);
+                    pixel_color += Self::ray_color(&r, self.max_depth, world);
                 }
 
                 pixel_color /= self.samples_per_pixel as f64;
@@ -109,13 +111,17 @@ impl Camera {
     }
 
     /// Returns the color for a given scene ray.
-    fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+        if depth <= 0 {
+            return Color::default();
+        }
+
         match world.hit(r, Interval::new(0.0, INFINITY)) {
             Some(rec) => {
                 // 击中后在同一面发生漫反射
                 let direction = random_on_hemisphere(&rec.normal);
                 // 每次 bounce 返回 50% 的颜色, 我们应该期望得到漂亮的灰色
-                0.5 * Self::ray_color(&Ray::new(rec.p, direction), world)
+                0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world)
             }
             None => {
                 let unit_direction = unit_vector(r.direction());
