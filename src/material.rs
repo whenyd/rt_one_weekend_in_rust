@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::random_unit_vector;
+use crate::vec3::{random_unit_vector, reflect};
 
 pub struct Scattered {
     pub ray: Ray,           // 散射后产生的光线, 或者说吸收了入射光线
@@ -49,5 +49,24 @@ impl Material for Lambertian {
         let scatter_ray = Ray::new(rec.p, scatter_direction);
 
         Some(Scattered::new(scatter_ray, self.albedo))
+    }
+}
+
+pub struct Metal {
+    albedo: Color,
+}
+
+// impl Metal {
+//     fn new(albedo: Color) -> Self {
+//         Self { albedo }
+//     }
+// }
+
+impl Material for Metal {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered> {
+        // 光滑的金属满足镜面反射
+        let reflected = reflect(&r_in.direction(), &rec.normal);
+
+        Some(Scattered::new(Ray::new(rec.p, reflected), self.albedo))
     }
 }

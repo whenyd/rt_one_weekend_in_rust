@@ -181,3 +181,8 @@ pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         -random_vec
     }
 }
+
+/// 返回入射方向v, 法线n时的镜面反射方向.
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * dot(*v, *n) * (*n)
+}
