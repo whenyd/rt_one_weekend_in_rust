@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::{random_unit_vector, reflect, unit_vector};
+use crate::vec3::{random_unit_vector, reflect, refract, unit_vector};
 
 pub struct Scattered {
     pub ray: Ray,           // 散射后产生的光线, 或者说吸收了入射光线
@@ -54,7 +54,7 @@ pub struct Metal {
 impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Self {
         // 模糊因子最大为1
-        let fuzz = if fuzz < 1.0 { fuzz } else { 1.0 };
+        let fuzz = fuzz.min(1.0);
         Self { albedo, fuzz }
     }
 }
@@ -69,5 +69,30 @@ impl Material for Metal {
         reflected = unit_vector(reflected) + (self.fuzz * random_unit_vector());
 
         Some(Scattered::new(Ray::new(rec.p, reflected), self.albedo))
+    }
+}
+
+pub struct Dielectric {
+    // Refractive index in vacuum or air, or the relative refraction index.
+    // 相对折射率 = 材料折射率/(包围材料的)介质折射率
+    refraction_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(refraction_index: f64) -> Self {
+        Self { refraction_index }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered> {
+        let ri = if rec.front_face { 1.0 / self.refraction_index } else { self.refraction_index };
+        let unit_direction = unit_vector(r_in.direction());
+        let refracted = refract(unit_direction, rec.normal, ri);
+        let scattered = Ray::new(rec.p, refracted);
+
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+
+        Some(Scattered::new(scattered, attenuation))
     }
 }
