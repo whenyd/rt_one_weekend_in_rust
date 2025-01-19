@@ -29,13 +29,7 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    albedo: Color,
-}
-
-impl Lambertian {
-    fn new(albedo: Color) -> Self {
-        Self { albedo }
-    }
+    pub albedo: Color,
 }
 
 impl Material for Lambertian {
@@ -53,14 +47,8 @@ impl Material for Lambertian {
 }
 
 pub struct Metal {
-    albedo: Color,
+    pub albedo: Color,
 }
-
-// impl Metal {
-//     fn new(albedo: Color) -> Self {
-//         Self { albedo }
-//     }
-// }
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered> {
