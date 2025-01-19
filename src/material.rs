@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::{random_unit_vector, reflect};
+use crate::vec3::{random_unit_vector, reflect, unit_vector};
 
 pub struct Scattered {
     pub ray: Ray,           // 散射后产生的光线, 或者说吸收了入射光线
@@ -47,13 +47,26 @@ impl Material for Lambertian {
 }
 
 pub struct Metal {
-    pub albedo: Color,
+    albedo: Color,
+    fuzz: f64,
+}
+
+impl Metal {
+    pub fn new(albedo: Color, fuzz: f64) -> Self {
+        // 模糊因子最大为1
+        let fuzz = if fuzz < 1.0 { fuzz } else { 1.0 };
+        Self { albedo, fuzz }
+    }
 }
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered> {
         // 光滑的金属满足镜面反射
-        let reflected = reflect(&r_in.direction(), &rec.normal);
+        let mut reflected = reflect(&r_in.direction(), &rec.normal);
+
+        // 模糊反射球面
+        // 需要归一化 reflected, 使模糊球有意义
+        reflected = unit_vector(reflected) + (self.fuzz * random_unit_vector());
 
         Some(Scattered::new(Ray::new(rec.p, reflected), self.albedo))
     }
