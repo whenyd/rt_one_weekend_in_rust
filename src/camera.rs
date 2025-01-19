@@ -5,7 +5,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, random};
-use crate::vec3::{Point3, random_unit_vector, unit_vector, Vec3};
+use crate::vec3::{Point3, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
@@ -119,11 +119,13 @@ impl Camera {
         // t的最小值略大于0, 忽略很近的命中点, 因为可能时浮点计算误差产生的
         match world.hit(r, Interval::new(0.001, INFINITY)) {
             Some(rec) => {
-                // 模拟朗伯反射, 随机反射集中在单位球内
-                let direction = rec.normal + random_unit_vector();
-
-                // 每次 bounce 返回 50% 的颜色, 我们应该期望得到漂亮的灰色
-                0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world)
+                // fixme 循环引用mat
+                if let Some(mat) = rec.mat.clone() {
+                    if let Some(scattered) = mat.scatter(r, &rec) {
+                        return scattered.attenuation * Self::ray_color(&scattered.ray, depth - 1, world);
+                    }
+                }
+                return Color::default();
             }
             None => {
                 let unit_direction = unit_vector(r.direction());
