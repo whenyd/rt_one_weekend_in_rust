@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::vec3::random_unit_vector;
 
 pub struct Scattered {
     pub ray: Ray,           // 散射后产生的光线, 或者说吸收了入射光线
@@ -25,4 +26,28 @@ impl Scattered {
 pub trait Material {
     /// 对于入射光线和击中点, 计算衰减和散射.
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered>;
+}
+
+pub struct Lambertian {
+    albedo: Color,
+}
+
+impl Lambertian {
+    fn new(albedo: Color) -> Self {
+        Self { albedo }
+    }
+}
+
+impl Material for Lambertian {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<Scattered> {
+        // 模拟朗伯反射, 随机反射集中在单位球内
+        let mut scatter_direction = rec.normal + random_unit_vector();
+        if scatter_direction.near_zero() {
+            scatter_direction = rec.normal;
+        }
+
+        let scatter_ray = Ray::new(rec.p, scatter_direction);
+
+        Some(Scattered::new(scatter_ray, self.albedo))
+    }
 }

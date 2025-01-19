@@ -122,6 +122,11 @@ impl Vec3 {
         self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
     }
 
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        (self.e[0].abs() < s) && (self.e[1] < s) && (self.e[2] < s)
+    }
+
     pub fn random() -> Self {
         Self { e: [random(), random(), random()] }
     }
