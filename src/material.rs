@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::rtweekend::random;
 use crate::vec3::{dot, random_unit_vector, reflect, refract, unit_vector, Vec3};
 
 pub struct Scattered {
@@ -82,6 +83,12 @@ impl Dielectric {
     pub fn new(refraction_index: f64) -> Self {
         Self { refraction_index }
     }
+
+    fn reflectance(&self, cosine: f64, refraction_index: f64) -> f64 {
+        let mut r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
+    }
 }
 
 impl Material for Dielectric {
@@ -94,7 +101,7 @@ impl Material for Dielectric {
 
         let cannot_refract = ri * sin_theta > 1.0;
         let mut direction: Vec3;
-        if cannot_refract {
+        if cannot_refract || self.reflectance(cos_theta, ri) > random() {
             direction = reflect(&unit_direction, &rec.normal);
         } else {
             direction = refract(unit_direction, rec.normal, ri);
