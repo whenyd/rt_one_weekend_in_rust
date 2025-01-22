@@ -5,7 +5,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::rtweekend::{degrees_to_radians, INFINITY, random};
-use crate::vec3::{cross, Point3, unit_vector, Vec3};
+use crate::vec3::{cross, Point3, random_in_unit_disk, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
@@ -19,6 +19,9 @@ pub struct Camera {
     pub lookat: Point3,
     pub vup: Vec3,               // 相机的 view up 方向
 
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
+
     // 在 initialize 中计算
     image_height: i32,
     center: Point3,
@@ -30,6 +33,10 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     w: Vec3,
+
+    // 控制散焦椭圆的大小
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 
@@ -46,6 +53,10 @@ impl Camera {
             lookat: Point3::new(0.0, 0.0, -1.0),
             vup: Vec3::new(0.0, 1.0, 0.0),
 
+            defocus_angle: 0.0,
+            focus_dist: 10.0,
+
+            // private
             image_height: 0,
             center: Default::default(),
             pixel00_loc: Default::default(),
@@ -55,6 +66,9 @@ impl Camera {
             u: Default::default(),
             v: Default::default(),
             w: Default::default(),
+
+            defocus_disk_u: Default::default(),
+            defocus_disk_v: Default::default(),
         }
     }
 
@@ -83,13 +97,17 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
+        // Construct a camera ray originating from the defocus disk and
+        // directed at a randomly sampled point around the pixel location i, j.
+
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
             + (i as f64 + offset.x()) * self.pixel_delta_u
             + (j as f64 + offset.y()) * self.pixel_delta_v;
 
-        let ray_direction = pixel_sample - self.center;
-        Ray::new(self.center, ray_direction)
+        let ray_origin = if self.defocus_angle <= 0.0 { self.center } else { self.defocus_disk_sample() };
+        let ray_direction = pixel_sample - ray_origin;
+        Ray::new(ray_origin, ray_direction)
     }
 
     fn initialize(&mut self) {
@@ -100,11 +118,10 @@ impl Camera {
 
         /* Camera */
         let camera_center = self.lookfrom;
-        let focal_length = (self.lookfrom - self.lookat).length();
 
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_dist; // 假设成像平面始终在焦平面上
         // 视口宽度要计算, 而不能直接取图像宽度, 两者不同
         // 一方因为面图像高度会向下取整, 这会增加ratio; 另一方面因为图像高度最小为1
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
@@ -123,7 +140,7 @@ impl Camera {
 
         // 左上角(世界坐标)
         let viewport_upper_left = camera_center
-            - focal_length * self.w
+            - self.focus_dist * self.w
             - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left
             + pixel_delta_u / 2.0 + pixel_delta_v / 2.0;
@@ -133,6 +150,11 @@ impl Camera {
         self.pixel00_loc = pixel00_loc;
         self.pixel_delta_u = pixel_delta_u;
         self.pixel_delta_v = pixel_delta_v;
+
+        // Calculate the camera defocus disk basis vectors.
+        let defocus_radius = self.focus_dist * degrees_to_radians(self.defocus_angle / 2.0).tan();
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
     }
 
     /// Returns the color for a given scene ray.
@@ -165,5 +187,9 @@ impl Camera {
     fn sample_square() -> Vec3 {
         // 从 [0,1) 到 [-0.5, 0.5]
         Vec3::new(random() - 0.5, random() - 0.5, 0.0)
+    }
+    fn defocus_disk_sample(&self) -> Vec3 {
+        let p = random_in_unit_disk();
+        self.center + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
 }
