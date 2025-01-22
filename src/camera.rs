@@ -5,7 +5,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::rtweekend::{degrees_to_radians, INFINITY, random};
-use crate::vec3::{Point3, unit_vector, Vec3};
+use crate::vec3::{cross, Point3, unit_vector, Vec3};
 
 pub struct Camera {
     // 通过 new 赋于默认值
@@ -13,7 +13,11 @@ pub struct Camera {
     pub image_width: i32,        // Rendered image width in pixel count
     pub samples_per_pixel: i32,  // Count of random samples for each pixel
     pub max_depth: i32,          // Maximum number of ray bounces into scene
+
     pub vfov: f64,               // 垂直视场, 单位度
+    pub lookfrom: Point3,
+    pub lookat: Point3,
+    pub vup: Vec3,               // 相机的 view up 方向
 
     // 在 initialize 中计算
     image_height: i32,
@@ -21,6 +25,11 @@ pub struct Camera {
     pixel00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+
+    // Camera frame basis vectors
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
 }
 
 
@@ -31,13 +40,21 @@ impl Camera {
             image_width: 400,
             samples_per_pixel: 10,
             max_depth: 10,
+
             vfov: 90.0,
+            lookfrom: Point3::default(),
+            lookat: Point3::new(0.0, 0.0, -1.0),
+            vup: Vec3::new(0.0, 1.0, 0.0),
 
             image_height: 0,
             center: Default::default(),
             pixel00_loc: Default::default(),
             pixel_delta_u: Default::default(),
             pixel_delta_v: Default::default(),
+
+            u: Default::default(),
+            v: Default::default(),
+            w: Default::default(),
         }
     }
 
@@ -82,9 +99,9 @@ impl Camera {
         image_height = if image_height < 1 { 1 } else { image_height };
 
         /* Camera */
-        let camera_center = Point3::default();
-        let focal_length = 1.0;
-        
+        let camera_center = self.lookfrom;
+        let focal_length = (self.lookfrom - self.lookat).length();
+
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
@@ -92,9 +109,13 @@ impl Camera {
         // 一方因为面图像高度会向下取整, 这会增加ratio; 另一方面因为图像高度最小为1
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
 
+        self.w = unit_vector(self.lookfrom - self.lookat);
+        self.u = unit_vector(cross(self.vup, self.w));
+        self.v = cross(self.w, self.u);
+
         // 计算垂直与视口边缘的向量(世界坐标)
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = viewport_width * self.u;    // 沿着视口水平方向的投影
+        let viewport_v = viewport_height * -self.v;  // 沿着视口垂直边向下的投影
 
         // uv 方向像素间的间隔
         let pixel_delta_u = viewport_u / self.image_width as f64;
@@ -102,7 +123,7 @@ impl Camera {
 
         // 左上角(世界坐标)
         let viewport_upper_left = camera_center
-            - Vec3::new(0.0, 0.0, focal_length)
+            - focal_length * self.w
             - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left
             + pixel_delta_u / 2.0 + pixel_delta_v / 2.0;
