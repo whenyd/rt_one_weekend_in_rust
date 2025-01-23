@@ -83,6 +83,7 @@ impl Camera {
             eprint!("\rScanlines remaining: {} ", self.image_height - j);
             stdout().flush().unwrap();
             for i in 0..self.image_width {
+                // msaa 在像素周围进行重复采样, 使得边缘过渡更平滑, 非边缘部分更加均匀, 从而提升像素质量
                 let mut pixel_color = Color::default();
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
@@ -100,11 +101,13 @@ impl Camera {
         // Construct a camera ray originating from the defocus disk and
         // directed at a randomly sampled point around the pixel location i, j.
 
+        // msaa: 终点随机波动, 在像素周围的square随机采样
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
             + (i as f64 + offset.x()) * self.pixel_delta_u
             + (j as f64 + offset.y()) * self.pixel_delta_v;
 
+        // defocus blur: 起点随机波动
         let ray_origin = if self.defocus_angle <= 0.0 { self.center } else { self.defocus_disk_sample() };
         let ray_direction = pixel_sample - ray_origin;
         Ray::new(ray_origin, ray_direction)
