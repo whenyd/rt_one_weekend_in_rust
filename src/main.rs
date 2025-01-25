@@ -20,6 +20,7 @@ mod rtweekend;
 mod interval;
 mod camera;
 mod material;
+mod aabb;
 
 
 fn main() {
