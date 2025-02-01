@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use crate::aabb::{AABB, AABBParameter};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
@@ -7,19 +8,17 @@ use crate::ray::Ray;
 #[derive(Default)]
 pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
+    bbox: AABB,
 }
 
 impl HittableList {
-    fn new(object: Rc<dyn Hittable>) -> Self {
-        Self { objects: vec![object] }
-    }
-
     pub fn clear(&mut self) {
         self.objects.clear()
     }
 
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.objects.push(object)
+        self.bbox = AABB::new(AABBParameter::Box { box1: self.bbox, box2: object.bounding_box() });
+        self.objects.push(object);
     }
 }
 
@@ -44,5 +43,9 @@ impl Hittable for HittableList {
         //     None
         // }
         hit_anything.then(|| rec)
+    }
+
+    fn bounding_box(&self) -> AABB {
+        return self.bbox;
     }
 }
