@@ -2,7 +2,7 @@ use std::io::{stdout, Write};
 
 use crate::color::Color;
 use crate::hittable::Hittable;
-use crate::interval::Interval;
+use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
 use crate::rtweekend::{degrees_to_radians, INFINITY, random};
 use crate::vec3::{cross, Point3, random_in_unit_disk, unit_vector, Vec3};
@@ -167,7 +167,7 @@ impl Camera {
         }
 
         // t的最小值略大于0, 忽略很近的命中点, 因为可能时浮点计算误差产生的
-        match world.hit(r, Interval::new(0.001, INFINITY)) {
+        match world.hit(r, Interval::new(IntervalParameter::Range { min: 0.001, max: INFINITY })) {
             Some(rec) => {
                 // fixme 循环引用mat
                 if let Some(mat) = rec.mat.clone() {

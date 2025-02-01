@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::hittable::{HitRecord, Hittable};
-use crate::interval::Interval;
+use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
 
 #[derive(Default)]
@@ -31,7 +31,7 @@ impl Hittable for HittableList {
 
         // 使用 iter() 遍历，以确保只获取不可变引用
         for object in self.objects.iter() {
-            if let Some(temp) = object.hit(r, Interval::new(ray_t.min, closest_so_far)) {
+            if let Some(temp) = object.hit(r, Interval::new(IntervalParameter::Range { min: ray_t.min, max: closest_so_far })) {
                 hit_anything = true;
                 closest_so_far = temp.t;
                 rec = temp;

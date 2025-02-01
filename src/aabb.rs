@@ -1,24 +1,45 @@
-use crate::interval::Interval;
+use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
 use crate::vec3::Point3;
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct AABB {
     pub x: Interval,
     pub y: Interval,
     pub z: Interval,
 }
 
-impl AABB {
-    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { x, y, z }
-    }
+pub enum AABBParameter {
+    Default { x: Interval, y: Interval, z: Interval },
+    Point { a: Point3, b: Point3 },
+    Box { box1: AABB, box2: AABB },
+}
 
-    pub fn new_with_point(a: &Point3, b: &Point3) -> Self {
-        let x = if a.x() < b.x() { Interval::new(a.x(), b.x()) } else { Interval::new(b.x(), a.x()) };
-        let y = if a.y() < b.y() { Interval::new(a.y(), b.y()) } else { Interval::new(b.y(), a.y()) };
-        let z = if a.z() < b.z() { Interval::new(a.z(), b.z()) } else { Interval::new(b.z(), a.z()) };
-        Self { x, y, z }
+impl AABB {
+    pub fn new(param: AABBParameter) -> Self {
+        match param {
+            AABBParameter::Default { x, y, z } => {
+                Self { x, y, z }
+            }
+            AABBParameter::Point { a, b } => {
+                let x_param = IntervalParameter::Range { min: a.x().min(b.x()), max: a.x().max(b.x()) };
+                let y_param = IntervalParameter::Range { min: a.y().min(b.y()), max: a.y().max(b.y()) };
+                let z_param = IntervalParameter::Range { min: a.z().min(b.z()), max: a.z().max(b.z()) };
+
+                Self {
+                    x: Interval::new(x_param),
+                    y: Interval::new(y_param),
+                    z: Interval::new(z_param),
+                }
+            }
+            AABBParameter::Box { box1, box2 } => {
+                Self {
+                    x: Interval::new(IntervalParameter::Interval { a: box1.x, b: box2.x }),
+                    y: Interval::new(IntervalParameter::Interval { a: box1.y, b: box2.y }),
+                    z: Interval::new(IntervalParameter::Interval { a: box1.z, b: box2.z }),
+                }
+            }
+        }
     }
 
     pub fn axis_interval(&self, n: i32) -> &Interval {

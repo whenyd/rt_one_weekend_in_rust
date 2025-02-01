@@ -1,8 +1,15 @@
 use crate::rtweekend::INFINITY;
 
+#[derive(Clone, Copy)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
+}
+
+pub enum IntervalParameter {
+    Default, // Default interval is empty
+    Range { min: f64, max: f64 },
+    Interval { a: Interval, b: Interval },
 }
 
 impl Default for Interval {
@@ -15,8 +22,18 @@ impl Default for Interval {
 }
 
 impl Interval {
-    pub fn new(min: f64, max: f64) -> Self {
-        Self { min, max }
+    pub fn new(param: IntervalParameter) -> Self {
+        match param {
+            IntervalParameter::Default => Default::default(),
+            IntervalParameter::Range { min, max } => {
+                Self { min, max }
+            }
+            IntervalParameter::Interval { a, b } => {
+                let min = a.min.min(b.min);
+                let max = a.max.max(b.max);
+                Self { min, max }
+            }
+        }
     }
 
     pub fn size(&self) -> f64 {
