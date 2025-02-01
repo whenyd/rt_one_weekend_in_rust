@@ -34,9 +34,9 @@ impl AABB {
             }
             AABBParameter::Box { box1, box2 } => {
                 Self {
-                    x: Interval::new(IntervalParameter::Interval { a: box1.x, b: box2.x }),
-                    y: Interval::new(IntervalParameter::Interval { a: box1.y, b: box2.y }),
-                    z: Interval::new(IntervalParameter::Interval { a: box1.z, b: box2.z }),
+                    x: Interval::new(IntervalParameter::EncloseInterval { a: box1.x, b: box2.x }),
+                    y: Interval::new(IntervalParameter::EncloseInterval { a: box1.y, b: box2.y }),
+                    z: Interval::new(IntervalParameter::EncloseInterval { a: box1.z, b: box2.z }),
                 }
             }
         }

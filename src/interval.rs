@@ -9,7 +9,7 @@ pub struct Interval {
 pub enum IntervalParameter {
     Default, // Default interval is empty
     Range { min: f64, max: f64 },
-    Interval { a: Interval, b: Interval },
+    EncloseInterval { a: Interval, b: Interval }, // Create the interval tightly enclosing the two input intervals.
 }
 
 impl Default for Interval {
@@ -28,7 +28,7 @@ impl Interval {
             IntervalParameter::Range { min, max } => {
                 Self { min, max }
             }
-            IntervalParameter::Interval { a, b } => {
+            IntervalParameter::EncloseInterval { a, b } => {
                 let min = a.min.min(b.min);
                 let max = a.max.max(b.max);
                 Self { min, max }
