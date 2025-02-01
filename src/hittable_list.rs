@@ -12,6 +12,12 @@ pub struct HittableList {
 }
 
 impl HittableList {
+    pub fn new(object: Rc<dyn Hittable>) -> Self {
+        let mut this: Self = Default::default();
+        this.add(object);
+        this
+    }
+
     pub fn clear(&mut self) {
         self.objects.clear()
     }

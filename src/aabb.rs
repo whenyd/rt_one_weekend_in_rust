@@ -42,7 +42,7 @@ impl AABB {
         }
     }
 
-    pub fn axis_interval(&self, n: i32) -> &Interval {
+    pub fn axis_interval(&self, n: usize) -> &Interval {
         match n {
             1 => &self.y,
             2 => &self.z,
