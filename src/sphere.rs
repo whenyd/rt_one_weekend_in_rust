@@ -1,21 +1,28 @@
 use std::rc::Rc;
 
+use crate::aabb::{AABB, AABBParameter};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vec3::{dot, Point3};
+use crate::vec3::{dot, Point3, Vec3};
 
 pub struct Sphere {
     center: Point3,
     radius: f64,
     mat: Rc<dyn Material>,
+    bbox: AABB,
 }
 
 impl Sphere {
     pub fn new(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
-        // fmax(0, radius)
-        Self { center, radius, mat }
+        let radius = radius.max(0.0);
+        let rvec = Vec3::new(radius, radius, radius);
+        let box1 = AABB::new(AABBParameter::Point { a: center - rvec, b: center + rvec });
+        let box2 = AABB::new(AABBParameter::Point { a: center - rvec, b: center + rvec });
+        let bbox = AABB::new(AABBParameter::Box { box1, box2 });
+
+        Self { center, radius, mat, bbox }
     }
 }
 
@@ -52,5 +59,9 @@ impl Hittable for Sphere {
         rec.set_face_normal(r, &outward_normal);
 
         Some(rec)
+    }
+
+    fn bounding_box(&self) -> AABB {
+        return self.bbox;
     }
 }
