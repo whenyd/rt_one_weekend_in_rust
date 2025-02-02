@@ -1,12 +1,12 @@
 use std::cmp::Ordering;
 use std::rc::Rc;
 
+use crate::aabb;
 use crate::aabb::{AABB, AABBParameter};
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
-use crate::rtweekend::random_int;
 
 pub struct BVHNode {
     left: Rc<dyn Hittable>,
@@ -30,8 +30,14 @@ impl BVHNode {
     }
 
     fn build_with_objects(objects: &mut [Rc<dyn Hittable>]) -> Self {
-        // 1. 随机选择一个轴
-        let axis = random_int(0, 2);
+        let mut bbox = aabb::EMPTY;
+        // 通过新增对象, 扩展 bbox 容纳整个 objects
+        for obj in objects.iter() {
+            bbox = AABB::new(AABBParameter::Box { box1: bbox, box2: obj.bounding_box() });
+        }
+
+        // 1. 选择最长的轴
+        let axis = bbox.longest_axis();
 
         let comparator = match axis {
             0 => Self::box_x_compare,
@@ -56,7 +62,7 @@ impl BVHNode {
             }
             _ => {
                 // 2. Sort the primitives
-                objects.sort_by(|a, b| comparator(a, b));
+                // objects.sort_by(|a, b| comparator(a, b));
 
                 // 3. 每个子树各一半
                 let mid = object_span / 2;
@@ -65,7 +71,6 @@ impl BVHNode {
             }
         }
 
-        let bbox = AABB::new(AABBParameter::Box { box1: left.bounding_box(), box2: right.bounding_box() });
         Self { left, right, bbox }
     }
 

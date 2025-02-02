@@ -1,3 +1,4 @@
+use crate::interval;
 use crate::interval::{Interval, IntervalParameter};
 use crate::ray::Ray;
 use crate::vec3::Point3;
@@ -76,4 +77,23 @@ impl AABB {
 
         true
     }
+
+    pub fn longest_axis(&self) -> usize {
+        if self.x.size() > self.y.size() {
+            if self.x.size() > self.z.size() {
+                0
+            } else {
+                2
+            }
+        } else {
+            if self.y.size() > self.z.size() {
+                1
+            } else {
+                2
+            }
+        }
+    }
 }
+
+pub const EMPTY: AABB = AABB { x: interval::EMPTY, y: interval::EMPTY, z: interval::EMPTY };
+pub const UNIVERSE: AABB = AABB { x: interval::UNIVERSE, y: interval::UNIVERSE, z: interval::UNIVERSE };
